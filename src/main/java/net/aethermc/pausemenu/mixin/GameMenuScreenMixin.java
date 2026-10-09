@@ -3,6 +3,8 @@ package net.aethermc.pausemenu.mixin;
 import net.aethermc.pausemenu.AetherPauseMenuMod;
 import net.aethermc.pausemenu.RankReader;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.RenderPipelines;
+import net.minecraft.util.Identifier;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
@@ -26,6 +28,7 @@ public abstract class GameMenuScreenMixin extends Screen {
     private static final int BTN_W = 210;
     private static final int BTN_H = 27;
     private static final int BTN_GAP = 8;
+    private static final Identifier AETHERMC_LOGO = Identifier.of("aethermc_pausemenu", "aethermc-logo.png");
 
     private static final int C_OVERLAY = 0x00050A12;
     private static final int C_PANEL = 0xF0161D29;
@@ -124,15 +127,15 @@ public abstract class GameMenuScreenMixin extends Screen {
         // Minecraft-style cyan button textures and the game world stays visible.
         // Only the player profile card is opaque.
         drawPanel(ctx, rx, py, rw, ph);
-        // AetherMC wordmark header: large cyan title with pixel-like framing.
+        // Draw the uploaded AetherMC logo texture instead of a text-only wordmark.
         int logoCenterX = px + pw / 2;
-        ctx.fill(logoCenterX - 76, py + 8, logoCenterX + 76, py + 9, C_ACCENT_DARK);
-        ctx.fill(logoCenterX - 66, py + 10, logoCenterX + 66, py + 11, C_ACCENT);
-        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("AETHERMC"),
-            logoCenterX, py + 13, C_ACCENT_LIGHT);
-        ctx.fill(logoCenterX - 66, py + 27, logoCenterX + 66, py + 28, C_ACCENT_DARK);
+        int logoWidth = Math.min(180, pw - 20);
+        int logoHeight = Math.max(20, Math.round(logoWidth * 144.0F / 814.0F));
+        ctx.drawTexture(RenderPipelines.GUI_TEXTURED, AETHERMC_LOGO,
+            logoCenterX - logoWidth / 2, py + 9, 0.0F, 0.0F,
+            logoWidth, logoHeight, 814, 144);
         ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("MINECRAFT NETWORK"),
-            logoCenterX, py + 32, C_ACCENT);
+            logoCenterX, py + 13 + logoHeight, C_ACCENT);
 
         // Let the active resource pack render buttons like vanilla Options.
         super.render(ctx, mouseX, mouseY, delta);
