@@ -100,7 +100,10 @@ public abstract class GameMenuScreenMixin extends Screen {
         int rx = px + PANEL_W + PANEL_GAP;
         int ry = (this.height - PLAYER_H) / 2;
 
-        this.renderBackground(ctx, mouseX, mouseY, delta);
+        // Do not call Screen.renderBackground here: in 1.21.11 it triggers
+        // the frame blur pass, and the game can throw "Can only blur once per frame"
+        // when another screen/render hook already performed that pass.
+        // A translucent fill gives the pause menu its dark overlay without blurring.
         ctx.fill(0, 0, this.width, this.height, C_BG);
 
         drawPanel(ctx, px, py, PANEL_W, PANEL_H);
