@@ -38,6 +38,9 @@ public abstract class GameMenuScreenMixin extends Screen {
     private static final int C_WHITE = 0xFFFFFFFF;
     private static final int C_GRAY = 0xFF888888;
 
+    // Keep a bad preview render from taking down the entire game screen.
+    private boolean aether$playerPreviewFailed;
+
     protected GameMenuScreenMixin(Text title) {
         super(title);
     }
@@ -126,17 +129,25 @@ public abstract class GameMenuScreenMixin extends Screen {
             Text.literal(rankName), rx + PLAYER_W / 2, rby + 2, rankColor);
 
         AbstractClientPlayerEntity player = this.client.player;
-        if (player != null) {
-            // Use vanilla's 1.21.11 entity-in-GUI renderer. DrawContext now
-            // uses a 2D Matrix3x2fStack, so manual 3D matrix transforms are invalid.
+        if (player != null && !this.aether$playerPreviewFailed) {
+            // Use vanilla's 1.21.11 entity-in-GUI renderer. Keep preview failures
+            // isolated so a renderer error does not crash the entire pause screen.
             int playerCenterX = rx + PLAYER_W / 2;
             int playerCenterY = ry + 132;
-            InventoryScreen.drawEntity(
-                ctx,
-                playerCenterX, playerCenterY,
-                playerCenterX, playerCenterY,
-                42, 0.0625F, mouseX, mouseY, player
-            );
+            try {
+                InventoryScreen.drawEntity(
+                    ctx,
+                    playerCenterX, playerCenterY,
+                    playerCenterX, playerCenterY,
+                    42, 0.0625F, mouseX, mouseY, player
+                );
+            } catch (RuntimeException | LinkageError exception) {
+                this.aether$playerPreviewFailed = true;
+                AetherPauseMenuMod.LOGGER.error(
+                    "Player preview failed in the AetherMC pause menu; disabling the preview for this screen.",
+                    exception
+                );
+            }
         }
 
         ctx.drawCenteredTextWithShadow(this.textRenderer,
