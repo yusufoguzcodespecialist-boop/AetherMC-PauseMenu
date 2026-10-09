@@ -25,15 +25,20 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.14.3'
 
       - name: Build mod
-        run: gradle build --no-daemon --stacktrace
+        run: ./gradlew build --no-daemon --stacktrace
+
+      - name: Verify JAR exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          ls -lah build/libs
+          test -n "$(find build/libs -maxdepth 1 -type f -name 'AetherMC-PauseMenu-*.jar' ! -name '*-sources.jar' -print -quit)"
 
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
-          name: AetherMC-PauseMenu-1.1.0
+          name: AetherMC-PauseMenu
           path: build/libs/AetherMC-PauseMenu-*.jar
           if-no-files-found: error
