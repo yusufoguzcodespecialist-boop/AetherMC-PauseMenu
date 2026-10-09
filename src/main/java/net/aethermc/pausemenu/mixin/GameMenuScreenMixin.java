@@ -27,9 +27,9 @@ public abstract class GameMenuScreenMixin extends Screen {
     private static final int BTN_H = 25;
     private static final int BTN_GAP = 9;
 
-    private static final int C_OVERLAY = 0x99050A12;
-    private static final int C_PANEL = 0xE9161D29;
-    private static final int C_PANEL_INNER = 0xE90D131E;
+    private static final int C_OVERLAY = 0x44050A12;
+    private static final int C_PANEL = 0xB9161D29;
+    private static final int C_PANEL_INNER = 0xA90D131E;
     private static final int C_ACCENT = 0xFFFF762E;
     private static final int C_ACCENT_LIGHT = 0xFFFFA15F;
     private static final int C_ACCENT_DARK = 0xFFB83F19;
@@ -124,7 +124,7 @@ public abstract class GameMenuScreenMixin extends Screen {
         drawPanel(ctx, rx, py, rw, ph);
 
         // Left panel branding and status
-        ctx.fill(px + 14, py + 14, px + pw - 14, py + 62, 0xFF101722);
+        ctx.fill(px + 14, py + 14, px + pw - 14, py + 62, 0xAA101722);
         ctx.fill(px + 14, py + 14, px + pw - 14, py + 16, C_ACCENT);
         ctx.fill(px + 14, py + 60, px + pw - 14, py + 62, C_ACCENT_DARK);
         ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("AETHERMC"),
