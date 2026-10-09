@@ -30,13 +30,13 @@ public abstract class GameMenuScreenMixin extends Screen {
     private static final int C_OVERLAY = 0x44050A12;
     private static final int C_PANEL = 0xB9161D29;
     private static final int C_PANEL_INNER = 0xA90D131E;
-    private static final int C_ACCENT = 0xFFFF762E;
-    private static final int C_ACCENT_LIGHT = 0xFFFFA15F;
-    private static final int C_ACCENT_DARK = 0xFFB83F19;
+    private static final int C_ACCENT = 0xFF35BFFF;
+    private static final int C_ACCENT_LIGHT = 0xFF8BE4FF;
+    private static final int C_ACCENT_DARK = 0xFF1764C0;
     private static final int C_WHITE = 0xFFF5F7FB;
     private static final int C_MUTED = 0xFFAAAEB8;
-    private static final int C_BUTTON = 0xFF292F3B;
-    private static final int C_BUTTON_HOVER = 0xFF3A414F;
+    private static final int C_BUTTON = 0xFF202B3C;
+    private static final int C_BUTTON_HOVER = 0xFF2B4058;
 
     private boolean aether$playerPreviewFailed;
 
