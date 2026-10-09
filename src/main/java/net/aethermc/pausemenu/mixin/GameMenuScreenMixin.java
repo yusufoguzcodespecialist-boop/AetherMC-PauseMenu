@@ -3,7 +3,7 @@ package net.aethermc.pausemenu.mixin;
 import net.aethermc.pausemenu.AetherPauseMenuMod;
 import net.aethermc.pausemenu.RankReader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.RenderPipelines;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.util.Identifier;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.GameMenuScreen;
