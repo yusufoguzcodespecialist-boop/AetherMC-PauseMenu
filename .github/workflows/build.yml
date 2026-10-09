@@ -27,7 +27,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build mod
-        run: ./gradlew build --no-daemon --stacktrace
+        run: bash ./gradlew build --no-daemon --stacktrace
 
       - name: Verify JAR exists
         shell: bash
@@ -39,6 +39,6 @@ jobs:
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
-          name: AetherMC-PauseMenu-1.1.0
+          name: AetherMC-PauseMenu
           path: build/libs/AetherMC-PauseMenu-*.jar
           if-no-files-found: error
