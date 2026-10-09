@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "aethermc_pausemenu",
+  "version": "${version}",
+  "name": "AetherMC Pause Menu",
+  "description": "Custom pause menu for AetherMC server",
+  "authors": ["AetherMC"],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/aethermc_pausemenu/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["net.aethermc.pausemenu.AetherPauseMenuMod"]
+  },
+  "mixins": ["aethermc_pausemenu.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.16.14",
+    "minecraft": "~1.21.8",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
