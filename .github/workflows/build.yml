@@ -23,11 +23,13 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Set up Gradle
+      - name: Set up Gradle 9.2.0
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.2.0'
 
       - name: Build mod
-        run: bash ./gradlew build --no-daemon --stacktrace
+        run: gradle build --no-daemon --stacktrace
 
       - name: Verify JAR exists
         shell: bash
@@ -36,9 +38,11 @@ jobs:
           ls -lah build/libs
           test -n "$(find build/libs -maxdepth 1 -type f -name 'AetherMC-PauseMenu-*.jar' ! -name '*-sources.jar' -print -quit)"
 
-      - name: Upload JAR
+      - name: Upload mod JAR
         uses: actions/upload-artifact@v4
         with:
-          name: AetherMC-PauseMenu
-          path: build/libs/AetherMC-PauseMenu-*.jar
+          name: AetherMC-PauseMenu-JAR
+          path: |
+            build/libs/AetherMC-PauseMenu-*.jar
+            !build/libs/*-sources.jar
           if-no-files-found: error
