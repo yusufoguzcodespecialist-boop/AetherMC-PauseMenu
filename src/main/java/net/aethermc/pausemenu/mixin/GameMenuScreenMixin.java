@@ -87,12 +87,12 @@ public abstract class GameMenuScreenMixin extends Screen {
         int bx = buttonX();
         int bw = buttonWidth();
 
-        addDrawableChild(ButtonWidget.builder(Text.literal("Oyuna Dön"), b -> this.client.setScreen(null))
+        addDrawableChild(ButtonWidget.builder(Text.literal("Back to Game"), b -> this.client.setScreen(null))
             .dimensions(bx, buttonY(0), bw, BTN_H).build());
-        addDrawableChild(ButtonWidget.builder(Text.literal("AetherMC Ayarları"), b ->
+        addDrawableChild(ButtonWidget.builder(Text.literal("AetherMC Settings"), b ->
                 this.client.setScreen(new OptionsScreen(this, this.client.options)))
             .dimensions(bx, buttonY(1), bw, BTN_H).build());
-        addDrawableChild(ButtonWidget.builder(Text.literal("Oyundan Çık"), b -> {
+        addDrawableChild(ButtonWidget.builder(Text.literal("Disconnect"), b -> {
                 MinecraftClient client = this.client;
                 if (client == null) return;
                 if (client.getNetworkHandler() != null) {
@@ -132,12 +132,12 @@ public abstract class GameMenuScreenMixin extends Screen {
         ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("MINECRAFT NETWORK"),
             px + pw / 2, py + 42, C_ACCENT_LIGHT);
         ctx.fill(px + 20, py + 74, px + pw - 20, py + 75, 0xFF343B48);
-        ctx.drawTextWithShadow(this.textRenderer, Text.literal("MENÜ"), px + 20, py + 80, C_MUTED);
+        ctx.drawTextWithShadow(this.textRenderer, Text.literal("MENU"), px + 20, py + 80, C_MUTED);
 
         // Draw button surfaces after vanilla buttons so the whole menu shares one visual style.
         // ButtonWidget still owns mouse input and actions.
         super.render(ctx, mouseX, mouseY, delta);
-        String[] labels = {"Oyuna Dön", "AetherMC Ayarları", "Oyundan Çık"};
+        String[] labels = {"Back to Game", "AetherMC Settings", "Disconnect"};
         for (int i = 0; i < labels.length; i++) {
             int bx = buttonX();
             int by = buttonY(i);
@@ -156,7 +156,7 @@ public abstract class GameMenuScreenMixin extends Screen {
         String name = this.client.getSession().getUsername();
         ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(name),
             rx + rw / 2, py + 18, C_WHITE);
-        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("OYUNCU PROFİLİ"),
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("PLAYER PROFILE"),
             rx + rw / 2, py + 34, C_MUTED);
 
         int rankColor = 0xFF000000 | AetherPauseMenuMod.currentRankColor;
@@ -189,7 +189,7 @@ public abstract class GameMenuScreenMixin extends Screen {
         ctx.fill(rx + 16, bottom - 31, rx + rw - 16, bottom - 30, 0xFF343B48);
         ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("AETHERMC NETWORK"),
             rx + rw / 2, bottom - 22, C_ACCENT_LIGHT);
-        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("İyi oyunlar diler!"),
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Have a great game!"),
             rx + rw / 2, bottom - 11, C_MUTED);
         ci.cancel();
     }
