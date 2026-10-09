@@ -124,10 +124,15 @@ public abstract class GameMenuScreenMixin extends Screen {
         // Minecraft-style cyan button textures and the game world stays visible.
         // Only the player profile card is opaque.
         drawPanel(ctx, rx, py, rw, ph);
+        // AetherMC wordmark header: large cyan title with pixel-like framing.
+        int logoCenterX = px + pw / 2;
+        ctx.fill(logoCenterX - 76, py + 8, logoCenterX + 76, py + 9, C_ACCENT_DARK);
+        ctx.fill(logoCenterX - 66, py + 10, logoCenterX + 66, py + 11, C_ACCENT);
         ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("AETHERMC"),
-            px + pw / 2, py + 8, C_ACCENT_LIGHT);
+            logoCenterX, py + 13, C_ACCENT_LIGHT);
+        ctx.fill(logoCenterX - 66, py + 27, logoCenterX + 66, py + 28, C_ACCENT_DARK);
         ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("MINECRAFT NETWORK"),
-            px + pw / 2, py + 21, C_ACCENT);
+            logoCenterX, py + 32, C_ACCENT);
 
         // Let the active resource pack render buttons like vanilla Options.
         super.render(ctx, mouseX, mouseY, delta);
