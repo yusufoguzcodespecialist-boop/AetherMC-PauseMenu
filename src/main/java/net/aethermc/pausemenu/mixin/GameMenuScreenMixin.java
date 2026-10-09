@@ -155,8 +155,13 @@ public abstract class GameMenuScreenMixin extends Screen {
             int centerX = rx + rw / 2;
             int centerY = py + Math.min(190, ph - 52);
             try {
-                InventoryScreen.drawEntity(ctx, centerX, centerY, centerX, centerY,
-                    Math.min(58, Math.max(36, ph / 5)), 0.0625F, mouseX, mouseY, player);
+                int size = Math.min(58, Math.max(36, ph / 5));
+                // drawEntity expects a non-zero bounding rectangle. Passing centerX/centerY
+                // for both corners created a zero-sized viewport, so the skin was invisible.
+                InventoryScreen.drawEntity(ctx,
+                    centerX - size, centerY - size * 2,
+                    centerX + size, centerY,
+                    size, 0.0625F, mouseX, mouseY, player);
             } catch (RuntimeException | LinkageError exception) {
                 this.aether$playerPreviewFailed = true;
                 AetherPauseMenuMod.LOGGER.error("AetherMC player preview failed; disabling it for this screen.", exception);
