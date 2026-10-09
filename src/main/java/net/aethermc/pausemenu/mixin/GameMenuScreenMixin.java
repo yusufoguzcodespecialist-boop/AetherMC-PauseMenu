@@ -20,16 +20,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(GameMenuScreen.class)
 public abstract class GameMenuScreenMixin extends Screen {
     private static final int PANEL_GAP = 12;
-    private static final int PANEL_H = 260;
-    private static final int PANEL_W = 224;
-    private static final int PLAYER_W = 224;
-    private static final int BTN_W = 190;
-    private static final int BTN_H = 25;
-    private static final int BTN_GAP = 9;
+    private static final int PANEL_H = 270;
+    private static final int PANEL_W = 240;
+    private static final int PLAYER_W = 240;
+    private static final int BTN_W = 210;
+    private static final int BTN_H = 27;
+    private static final int BTN_GAP = 8;
 
-    private static final int C_OVERLAY = 0x44050A12;
-    private static final int C_PANEL = 0xB9161D29;
-    private static final int C_PANEL_INNER = 0xA90D131E;
+    private static final int C_OVERLAY = 0x00050A12;
+    private static final int C_PANEL = 0xF0161D29;
+    private static final int C_PANEL_INNER = 0xF00D131E;
     private static final int C_ACCENT = 0xFF35BFFF;
     private static final int C_ACCENT_LIGHT = 0xFF8BE4FF;
     private static final int C_ACCENT_DARK = 0xFF1764C0;
@@ -77,7 +77,7 @@ public abstract class GameMenuScreenMixin extends Screen {
     }
 
     private int buttonY(int index) {
-        return panelY() + 91 + index * (BTN_H + BTN_GAP);
+        return panelY() + 86 + index * (BTN_H + BTN_GAP);
     }
 
     @Inject(method = "init", at = @At("HEAD"), cancellable = true)
@@ -120,37 +120,17 @@ public abstract class GameMenuScreenMixin extends Screen {
 
         // Avoid Screen.renderBackground: on 1.21.11 it can execute a second blur pass.
         ctx.fill(0, 0, this.width, this.height, C_OVERLAY);
-        drawPanel(ctx, px, py, pw, ph);
+        // The left side has no panel or custom button fill: the resource pack supplies
+        // Minecraft-style cyan button textures and the game world stays visible.
+        // Only the player profile card is opaque.
         drawPanel(ctx, rx, py, rw, ph);
-
-        // Left panel branding and status
-        ctx.fill(px + 14, py + 14, px + pw - 14, py + 62, 0xAA101722);
-        ctx.fill(px + 14, py + 14, px + pw - 14, py + 16, C_ACCENT);
-        ctx.fill(px + 14, py + 60, px + pw - 14, py + 62, C_ACCENT_DARK);
         ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("AETHERMC"),
-            px + pw / 2, py + 25, C_WHITE);
+            px + pw / 2, py + 8, C_ACCENT_LIGHT);
         ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("MINECRAFT NETWORK"),
-            px + pw / 2, py + 42, C_ACCENT_LIGHT);
-        ctx.fill(px + 20, py + 74, px + pw - 20, py + 75, 0xFF343B48);
-        ctx.drawTextWithShadow(this.textRenderer, Text.literal("MENU"), px + 20, py + 80, C_MUTED);
+            px + pw / 2, py + 21, C_ACCENT);
 
-        // Draw button surfaces after vanilla buttons so the whole menu shares one visual style.
-        // ButtonWidget still owns mouse input and actions.
+        // Let the active resource pack render buttons like vanilla Options.
         super.render(ctx, mouseX, mouseY, delta);
-        String[] labels = {"Back to Game", "AetherMC Settings", "Disconnect"};
-        for (int i = 0; i < labels.length; i++) {
-            int bx = buttonX();
-            int by = buttonY(i);
-            int bw = buttonWidth();
-            boolean hovered = mouseX >= bx && mouseX < bx + bw && mouseY >= by && mouseY < by + BTN_H;
-            int fill = hovered ? C_BUTTON_HOVER : C_BUTTON;
-            ctx.fill(bx, by, bx + bw, by + BTN_H, 0xFF080B10);
-            ctx.fill(bx + 1, by + 1, bx + bw - 1, by + BTN_H - 1, fill);
-            ctx.fill(bx + 1, by + 1, bx + bw - 1, by + 3, hovered ? C_ACCENT_LIGHT : C_ACCENT);
-            ctx.fill(bx + 1, by + BTN_H - 3, bx + bw - 1, by + BTN_H - 1, C_ACCENT_DARK);
-            ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(labels[i]),
-                bx + bw / 2, by + 8, C_WHITE);
-        }
 
         // Player profile card
         String name = this.client.getSession().getUsername();
@@ -195,7 +175,7 @@ public abstract class GameMenuScreenMixin extends Screen {
     }
 
     private void drawPanel(DrawContext ctx, int x, int y, int w, int h) {
-        ctx.fill(x, y, x + w, y + h, 0xE5080B11);
+        ctx.fill(x, y, x + w, y + h, 0xFF080B11);
         ctx.fill(x + 1, y + 1, x + w - 1, y + h - 1, C_PANEL);
         ctx.fill(x + 2, y + 2, x + w - 2, y + h - 2, C_PANEL_INNER);
         ctx.fill(x + 2, y + 2, x + w - 2, y + 3, C_ACCENT);
