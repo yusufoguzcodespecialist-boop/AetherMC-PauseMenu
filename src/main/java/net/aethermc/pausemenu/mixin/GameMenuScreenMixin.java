@@ -5,16 +5,13 @@ import net.aethermc.pausemenu.RankReader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.GameMenuScreen;
+import net.minecraft.client.gui.screen.ingame.InventoryScreen;
+import net.minecraft.client.gui.screen.option.OptionsScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.render.DiffuseLighting;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.text.Text;
-import net.minecraft.util.math.RotationAxis;
-import org.joml.Quaternionf;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -68,7 +65,7 @@ public abstract class GameMenuScreenMixin extends Screen {
         addDrawableChild(ButtonWidget.builder(
             Text.literal("Options..."),
             b -> this.client.setScreen(
-                new net.minecraft.client.gui.screen.option.GameOptionsScreen(this, this.client.options)))
+                new OptionsScreen(this, this.client.options)))
             .dimensions(bx, by, BTN_W, BTN_H).build());
         by += BTN_H + BTN_GAP;
 
@@ -130,8 +127,16 @@ public abstract class GameMenuScreenMixin extends Screen {
 
         AbstractClientPlayerEntity player = this.client.player;
         if (player != null) {
-            drawPlayerModel(ctx, rx + PLAYER_W / 2, ry + PLAYER_H - 40,
-                40, mouseX, mouseY, player);
+            // Use vanilla's 1.21.11 entity-in-GUI renderer. DrawContext now
+            // uses a 2D Matrix3x2fStack, so manual 3D matrix transforms are invalid.
+            int playerCenterX = rx + PLAYER_W / 2;
+            int playerCenterY = ry + 132;
+            InventoryScreen.drawEntity(
+                ctx,
+                playerCenterX, playerCenterY,
+                playerCenterX, playerCenterY,
+                42, 0.0625F, mouseX, mouseY, player
+            );
         }
 
         ctx.drawCenteredTextWithShadow(this.textRenderer,
@@ -192,50 +197,4 @@ public abstract class GameMenuScreenMixin extends Screen {
         return 0xFF000000 | (r << 16) | (g << 8) | bl;
     }
 
-    @SuppressWarnings("deprecation")
-    private static void drawPlayerModel(DrawContext ctx, int x, int y, int size,
-                                        int mouseX, int mouseY, AbstractClientPlayerEntity player) {
-        float rx = x - mouseX;
-        float ry = y - size / 2.0f - mouseY;
-        Quaternionf rotation = RotationAxis.POSITIVE_Z.rotationDegrees(180.0f);
-        Quaternionf headRotation = RotationAxis.POSITIVE_X.rotationDegrees((float) Math.atan(ry / 40.0f) * 20.0f);
-        rotation.mul(headRotation);
-
-        float previousBodyYaw = player.bodyYaw;
-        float previousYaw = player.getYaw();
-        float previousPitch = player.getPitch();
-        float previousHeadYaw = player.headYaw;
-
-        player.bodyYaw = 180.0f + (float) Math.atan(rx / 40.0f) * 20.0f;
-        player.setYaw(180.0f + (float) Math.atan(rx / 40.0f) * 40.0f);
-        player.setPitch(-(float) Math.atan(ry / 40.0f) * 20.0f);
-        player.headYaw = player.getYaw();
-
-        MinecraftClient client = MinecraftClient.getInstance();
-        EntityRenderDispatcher dispatcher = client.getEntityRenderDispatcher();
-        boolean previousShadows = dispatcher.shouldRenderShadows();
-        dispatcher.setRenderShadows(false);
-        DiffuseLighting.disableGuiDepthLighting();
-
-        VertexConsumerProvider.Immediate immediate =
-            client.getBufferBuilders().getEntityVertexConsumers();
-
-        ctx.getMatrices().push();
-        try {
-            ctx.getMatrices().translate(x, y, 50.0);
-            ctx.getMatrices().scale(size, size, -size);
-            ctx.getMatrices().multiply(rotation);
-            dispatcher.render(player, 0.0, 0.0, 0.0, 0.0f, 1.0f,
-                ctx.getMatrices(), immediate, 0xF000F0);
-            immediate.draw();
-        } finally {
-            ctx.getMatrices().pop();
-            dispatcher.setRenderShadows(previousShadows);
-            DiffuseLighting.enableGuiDepthLighting();
-            player.bodyYaw = previousBodyYaw;
-            player.setYaw(previousYaw);
-            player.setPitch(previousPitch);
-            player.headYaw = previousHeadYaw;
-        }
-    }
 }

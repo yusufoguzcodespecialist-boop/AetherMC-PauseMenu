@@ -32,12 +32,12 @@ public final class RankReader {
             return;
         }
 
-        var score = scores.get(objective);
-        if (score == null) {
+        Integer scoreValue = scores.get(objective);
+        if (scoreValue == null) {
             return;
         }
 
-        int rankIndex = Math.max(0, Math.min(score.getScore(),
+        int rankIndex = Math.max(0, Math.min(scoreValue,
             AetherPauseMenuMod.RANK_NAMES.length - 1));
         AetherPauseMenuMod.currentRank = rankIndex;
         AetherPauseMenuMod.currentRankName = AetherPauseMenuMod.RANK_NAMES[rankIndex];
