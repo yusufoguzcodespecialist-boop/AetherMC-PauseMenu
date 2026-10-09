@@ -19,72 +19,87 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GameMenuScreen.class)
 public abstract class GameMenuScreenMixin extends Screen {
+    private static final int PANEL_GAP = 12;
+    private static final int PANEL_H = 260;
+    private static final int PANEL_W = 224;
+    private static final int PLAYER_W = 224;
+    private static final int BTN_W = 190;
+    private static final int BTN_H = 25;
+    private static final int BTN_GAP = 9;
 
-    private static final int PANEL_W = 170;
-    private static final int PANEL_H = 220;
-    private static final int BTN_W = 150;
-    private static final int BTN_H = 20;
-    private static final int BTN_GAP = 4;
-    private static final int PLAYER_W = 160;
-    private static final int PLAYER_H = 220;
-    private static final int PANEL_GAP = 16;
+    private static final int C_OVERLAY = 0x99050A12;
+    private static final int C_PANEL = 0xE9161D29;
+    private static final int C_PANEL_INNER = 0xE90D131E;
+    private static final int C_ACCENT = 0xFFFF762E;
+    private static final int C_ACCENT_LIGHT = 0xFFFFA15F;
+    private static final int C_ACCENT_DARK = 0xFFB83F19;
+    private static final int C_WHITE = 0xFFF5F7FB;
+    private static final int C_MUTED = 0xFFAAAEB8;
+    private static final int C_BUTTON = 0xFF292F3B;
+    private static final int C_BUTTON_HOVER = 0xFF3A414F;
 
-    private static final int C_BG = 0xD0050810;
-    private static final int C_PANEL = 0xE0080F1E;
-    private static final int C_BORDER_HI = 0xFF63C0FF;
-    private static final int C_BORDER_LO = 0xFF1860D0;
-    private static final int C_INNER = 0xFF091830;
-    private static final int C_TITLE_TOP = 0xFF7FE9FF;
-    private static final int C_WHITE = 0xFFFFFFFF;
-    private static final int C_GRAY = 0xFF888888;
-
-    // Keep a bad preview render from taking down the entire game screen.
     private boolean aether$playerPreviewFailed;
 
     protected GameMenuScreenMixin(Text title) {
         super(title);
     }
 
+    private int panelWidth() {
+        return Math.min(PANEL_W, Math.max(170, (this.width - 36) / 2 - PANEL_GAP / 2));
+    }
+
+    private int playerWidth() {
+        return panelWidth();
+    }
+
+    private int panelHeight() {
+        return Math.min(PANEL_H, Math.max(210, this.height - 28));
+    }
+
+    private int totalWidth() {
+        return panelWidth() + PANEL_GAP + playerWidth();
+    }
+
     private int leftPanelX() {
-        return (this.width - (PANEL_W + PANEL_GAP + PLAYER_W)) / 2;
+        return Math.max(8, (this.width - totalWidth()) / 2);
+    }
+
+    private int panelY() {
+        return Math.max(8, (this.height - panelHeight()) / 2);
+    }
+
+    private int buttonX() {
+        return leftPanelX() + (panelWidth() - Math.min(BTN_W, panelWidth() - 24)) / 2;
+    }
+
+    private int buttonWidth() {
+        return Math.min(BTN_W, panelWidth() - 24);
+    }
+
+    private int buttonY(int index) {
+        return panelY() + 91 + index * (BTN_H + BTN_GAP);
     }
 
     @Inject(method = "init", at = @At("HEAD"), cancellable = true)
     private void aether$init(CallbackInfo ci) {
         RankReader.update();
         this.clearChildren();
+        int bx = buttonX();
+        int bw = buttonWidth();
 
-        int px = leftPanelX();
-        int py = (this.height - PANEL_H) / 2;
-        int bx = px + (PANEL_W - BTN_W) / 2;
-        int by = py + 70;
-
-        addDrawableChild(ButtonWidget.builder(
-            Text.literal("Back to Game"),
-            b -> this.client.setScreen(null))
-            .dimensions(bx, by, BTN_W, BTN_H).build());
-        by += BTN_H + BTN_GAP;
-
-        addDrawableChild(ButtonWidget.builder(
-            Text.literal("Options..."),
-            b -> this.client.setScreen(
-                new OptionsScreen(this, this.client.options)))
-            .dimensions(bx, by, BTN_W, BTN_H).build());
-        by += BTN_H + BTN_GAP;
-
-        addDrawableChild(ButtonWidget.builder(
-            Text.literal("Disconnect"),
-            b -> {
+        addDrawableChild(ButtonWidget.builder(Text.literal("Oyuna Dön"), b -> this.client.setScreen(null))
+            .dimensions(bx, buttonY(0), bw, BTN_H).build());
+        addDrawableChild(ButtonWidget.builder(Text.literal("AetherMC Ayarları"), b ->
+                this.client.setScreen(new OptionsScreen(this, this.client.options)))
+            .dimensions(bx, buttonY(1), bw, BTN_H).build());
+        addDrawableChild(ButtonWidget.builder(Text.literal("Oyundan Çık"), b -> {
                 MinecraftClient client = this.client;
                 if (client == null) return;
-
                 if (client.getNetworkHandler() != null) {
                     client.getNetworkHandler().getConnection().disconnect(Text.literal("Disconnected"));
                 }
                 client.setScreen(new TitleScreen());
-            })
-            .dimensions(bx, by, BTN_W, BTN_H).build());
-
+            }).dimensions(bx, buttonY(2), bw, BTN_H).build());
         ci.cancel();
     }
 
@@ -95,120 +110,97 @@ public abstract class GameMenuScreenMixin extends Screen {
             return;
         }
 
+        int pw = panelWidth();
+        int ph = panelHeight();
         int px = leftPanelX();
-        int py = (this.height - PANEL_H) / 2;
-        int rx = px + PANEL_W + PANEL_GAP;
-        int ry = (this.height - PLAYER_H) / 2;
+        int py = panelY();
+        int rx = px + pw + PANEL_GAP;
+        int rw = playerWidth();
+        int bottom = py + ph;
 
-        // Do not call Screen.renderBackground here: in 1.21.11 it triggers
-        // the frame blur pass, and the game can throw "Can only blur once per frame"
-        // when another screen/render hook already performed that pass.
-        // A translucent fill gives the pause menu its dark overlay without blurring.
-        ctx.fill(0, 0, this.width, this.height, C_BG);
+        // Avoid Screen.renderBackground: on 1.21.11 it can execute a second blur pass.
+        ctx.fill(0, 0, this.width, this.height, C_OVERLAY);
+        drawPanel(ctx, px, py, pw, ph);
+        drawPanel(ctx, rx, py, rw, ph);
 
-        drawPanel(ctx, px, py, PANEL_W, PANEL_H);
-        drawTitleBanner(ctx, px + 10, py + 8, PANEL_W - 20, 36);
-        ctx.drawCenteredTextWithShadow(this.textRenderer,
-            Text.literal("AetherMC"), px + PANEL_W / 2, py + 20, C_TITLE_TOP);
+        // Left panel branding and status
+        ctx.fill(px + 14, py + 14, px + pw - 14, py + 62, 0xFF101722);
+        ctx.fill(px + 14, py + 14, px + pw - 14, py + 16, C_ACCENT);
+        ctx.fill(px + 14, py + 60, px + pw - 14, py + 62, C_ACCENT_DARK);
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("AETHERMC"),
+            px + pw / 2, py + 25, C_WHITE);
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("MINECRAFT NETWORK"),
+            px + pw / 2, py + 42, C_ACCENT_LIGHT);
+        ctx.fill(px + 20, py + 74, px + pw - 20, py + 75, 0xFF343B48);
+        ctx.drawTextWithShadow(this.textRenderer, Text.literal("MENÜ"), px + 20, py + 80, C_MUTED);
 
-        drawPanel(ctx, rx, ry, PLAYER_W, PLAYER_H);
+        // Draw button surfaces after vanilla buttons so the whole menu shares one visual style.
+        // ButtonWidget still owns mouse input and actions.
+        super.render(ctx, mouseX, mouseY, delta);
+        String[] labels = {"Oyuna Dön", "AetherMC Ayarları", "Oyundan Çık"};
+        for (int i = 0; i < labels.length; i++) {
+            int bx = buttonX();
+            int by = buttonY(i);
+            int bw = buttonWidth();
+            boolean hovered = mouseX >= bx && mouseX < bx + bw && mouseY >= by && mouseY < by + BTN_H;
+            int fill = hovered ? C_BUTTON_HOVER : C_BUTTON;
+            ctx.fill(bx, by, bx + bw, by + BTN_H, 0xFF080B10);
+            ctx.fill(bx + 1, by + 1, bx + bw - 1, by + BTN_H - 1, fill);
+            ctx.fill(bx + 1, by + 1, bx + bw - 1, by + 3, hovered ? C_ACCENT_LIGHT : C_ACCENT);
+            ctx.fill(bx + 1, by + BTN_H - 3, bx + bw - 1, by + BTN_H - 1, C_ACCENT_DARK);
+            ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(labels[i]),
+                bx + bw / 2, by + 8, C_WHITE);
+        }
 
+        // Player profile card
         String name = this.client.getSession().getUsername();
-        ctx.drawCenteredTextWithShadow(this.textRenderer,
-            Text.literal(name), rx + PLAYER_W / 2, ry + 8, C_WHITE);
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(name),
+            rx + rw / 2, py + 18, C_WHITE);
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("OYUNCU PROFİLİ"),
+            rx + rw / 2, py + 34, C_MUTED);
 
         int rankColor = 0xFF000000 | AetherPauseMenuMod.currentRankColor;
         String rankName = AetherPauseMenuMod.currentRankName;
-        int rw = Math.min(this.textRenderer.getWidth(rankName) + 10, PLAYER_W - 12);
-        int rby = ry + 20;
-        int rbx = rx + (PLAYER_W - rw) / 2;
-        ctx.fill(rbx - 1, rby - 1, rbx + rw + 1, rby + 11, 0xFF000000);
-        ctx.fill(rbx, rby, rbx + rw, rby + 10, 0xFF111520);
-        ctx.fill(rbx, rby, rbx + rw, rby + 1, rankColor);
-        ctx.fill(rbx, rby + 9, rbx + rw, rby + 10, rankColor);
-        ctx.fill(rbx, rby, rbx + 1, rby + 10, rankColor);
-        ctx.fill(rbx + rw - 1, rby, rbx + rw, rby + 10, rankColor);
-        ctx.drawCenteredTextWithShadow(this.textRenderer,
-            Text.literal(rankName), rx + PLAYER_W / 2, rby + 2, rankColor);
+        int rankTextWidth = this.textRenderer.getWidth(rankName);
+        int badgeWidth = Math.min(rankTextWidth + 18, rw - 24);
+        int badgeX = rx + (rw - badgeWidth) / 2;
+        int badgeY = py + 48;
+        ctx.fill(badgeX, badgeY, badgeX + badgeWidth, badgeY + 16, 0xFF080B10);
+        ctx.fill(badgeX + 1, badgeY + 1, badgeX + badgeWidth - 1, badgeY + 15, 0xFF222936);
+        ctx.fill(badgeX, badgeY, badgeX + badgeWidth, badgeY + 2, rankColor);
+        ctx.fill(badgeX, badgeY + 14, badgeX + badgeWidth, badgeY + 16, rankColor);
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(rankName),
+            rx + rw / 2, badgeY + 4, rankColor);
 
+        // Show the local player skin using Minecraft's own entity preview renderer.
         AbstractClientPlayerEntity player = this.client.player;
         if (player != null && !this.aether$playerPreviewFailed) {
-            // Use vanilla's 1.21.11 entity-in-GUI renderer. Keep preview failures
-            // isolated so a renderer error does not crash the entire pause screen.
-            int playerCenterX = rx + PLAYER_W / 2;
-            int playerCenterY = ry + 132;
+            int centerX = rx + rw / 2;
+            int centerY = py + Math.min(190, ph - 52);
             try {
-                InventoryScreen.drawEntity(
-                    ctx,
-                    playerCenterX, playerCenterY,
-                    playerCenterX, playerCenterY,
-                    42, 0.0625F, mouseX, mouseY, player
-                );
+                InventoryScreen.drawEntity(ctx, centerX, centerY, centerX, centerY,
+                    Math.min(58, Math.max(36, ph / 5)), 0.0625F, mouseX, mouseY, player);
             } catch (RuntimeException | LinkageError exception) {
                 this.aether$playerPreviewFailed = true;
-                AetherPauseMenuMod.LOGGER.error(
-                    "Player preview failed in the AetherMC pause menu; disabling the preview for this screen.",
-                    exception
-                );
+                AetherPauseMenuMod.LOGGER.error("AetherMC player preview failed; disabling it for this screen.", exception);
             }
         }
 
-        ctx.drawCenteredTextWithShadow(this.textRenderer,
-            Text.literal("AetherMC wishes you a good game!"),
-            rx + PLAYER_W / 2, ry + PLAYER_H - 14, C_GRAY);
-
-        super.render(ctx, mouseX, mouseY, delta);
+        ctx.fill(rx + 16, bottom - 31, rx + rw - 16, bottom - 30, 0xFF343B48);
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("AETHERMC NETWORK"),
+            rx + rw / 2, bottom - 22, C_ACCENT_LIGHT);
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("İyi oyunlar diler!"),
+            rx + rw / 2, bottom - 11, C_MUTED);
         ci.cancel();
     }
 
     private void drawPanel(DrawContext ctx, int x, int y, int w, int h) {
-        ctx.fill(x, y, x + w, y + h, 0xFF000000);
-        ctx.fill(x + 1, y + 1, x + w - 1, y + 2, C_BORDER_HI);
-        ctx.fill(x + 1, y + 1, x + 2, y + h - 1, C_BORDER_HI);
-        ctx.fill(x + 1, y + h - 2, x + w - 1, y + h - 1, C_BORDER_LO);
-        ctx.fill(x + w - 2, y + 1, x + w - 1, y + h - 1, C_BORDER_LO);
-        ctx.fill(x + 2, y + 2, x + w - 2, y + h - 2, C_INNER);
-        ctx.fill(x + 3, y + 3, x + w - 3, y + h - 3, C_PANEL);
-        ctx.fill(x + 3, y + 3, x + w - 3, y + 4, 0xFF1A3060);
-        drawGem(ctx, x, y + h / 2, 4);
-        drawGem(ctx, x + w - 1, y + h / 2, 4);
-        drawGem(ctx, x + w / 2, y, 4);
-        drawGem(ctx, x + w / 2, y + h - 1, 4);
-    }
-
-    private void drawGem(DrawContext ctx, int cx, int cy, int r) {
-        for (int dy = -r; dy <= r; dy++) {
-            for (int dx = -r; dx <= r; dx++) {
-                if (Math.abs(dx) + Math.abs(dy) <= r) {
-                    float t = (dy + r) / (float) (2 * r);
-                    boolean border = Math.abs(dx) + Math.abs(dy) == r;
-                    int color = border ? 0xFF000000 : lerpColor(C_BORDER_HI, C_BORDER_LO, t);
-                    ctx.fill(cx + dx, cy + dy, cx + dx + 1, cy + dy + 1, color);
-                }
-            }
-        }
-    }
-
-    private void drawTitleBanner(DrawContext ctx, int x, int y, int w, int h) {
-        ctx.fill(x, y, x + w, y + h, 0xFF000000);
+        ctx.fill(x, y, x + w, y + h, 0xE5080B11);
         ctx.fill(x + 1, y + 1, x + w - 1, y + h - 1, C_PANEL);
-        ctx.fill(x + 1, y + 1, x + w - 1, y + 2, C_BORDER_HI);
-        ctx.fill(x + 1, y + h - 2, x + w - 1, y + h - 1, C_BORDER_LO);
-        ctx.fill(x + 1, y + 1, x + 2, y + h - 1, C_BORDER_HI);
-        ctx.fill(x + w - 2, y + 1, x + w - 1, y + h - 1, C_BORDER_LO);
-        drawGem(ctx, x + w / 2, y, 4);
-        drawGem(ctx, x + w / 2, y + h - 1, 4);
-        drawGem(ctx, x, y + h / 2, 4);
-        drawGem(ctx, x + w - 1, y + h / 2, 4);
+        ctx.fill(x + 2, y + 2, x + w - 2, y + h - 2, C_PANEL_INNER);
+        ctx.fill(x + 2, y + 2, x + w - 2, y + 3, C_ACCENT);
+        ctx.fill(x + 2, y + h - 3, x + w - 2, y + h - 2, C_ACCENT_DARK);
+        ctx.fill(x + 2, y + 2, x + 3, y + h - 2, C_ACCENT_DARK);
+        ctx.fill(x + w - 3, y + 2, x + w - 2, y + h - 2, C_ACCENT_DARK);
     }
-
-    private static int lerpColor(int a, int b, float t) {
-        int ar = (a >> 16) & 0xFF, ag = (a >> 8) & 0xFF, ab = a & 0xFF;
-        int br = (b >> 16) & 0xFF, bg = (b >> 8) & 0xFF, bb = b & 0xFF;
-        int r = (int) (ar + (br - ar) * t);
-        int g = (int) (ag + (bg - ag) * t);
-        int bl = (int) (ab + (bb - ab) * t);
-        return 0xFF000000 | (r << 16) | (g << 8) | bl;
-    }
-
 }
