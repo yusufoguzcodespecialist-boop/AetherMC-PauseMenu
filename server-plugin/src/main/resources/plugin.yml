@@ -1,0 +1,6 @@
+name: AetherMCRankBridge
+version: 1.0.0
+main: net.aethermc.rankbridge.AetherMCRankBridge
+api-version: '1.21'
+depend: [LuckPerms]
+description: Syncs LuckPerms primary groups to the AetherMC Pause Menu client mod.

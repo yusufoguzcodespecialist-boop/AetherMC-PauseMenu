@@ -28,7 +28,6 @@ public abstract class GameMenuScreenMixin extends Screen {
     private static final int BTN_W = 210;
     private static final int BTN_H = 27;
     private static final int BTN_GAP = 8;
-    private static final Identifier AETHERMC_LOGO = Identifier.of("aethermc_pausemenu", "aethermc-logo.png");
 
     private static final int C_OVERLAY = 0x00050A12;
     private static final int C_PANEL = 0xF0161D29;
@@ -38,8 +37,6 @@ public abstract class GameMenuScreenMixin extends Screen {
     private static final int C_ACCENT_DARK = 0xFF1764C0;
     private static final int C_WHITE = 0xFFF5F7FB;
     private static final int C_MUTED = 0xFFAAAEB8;
-    private static final int C_BUTTON = 0xFF202B3C;
-    private static final int C_BUTTON_HOVER = 0xFF2B4058;
 
     private boolean aether$playerPreviewFailed;
 
@@ -121,34 +118,27 @@ public abstract class GameMenuScreenMixin extends Screen {
         int rw = playerWidth();
         int bottom = py + ph;
 
-        // Avoid Screen.renderBackground: on 1.21.11 it can execute a second blur pass.
         ctx.fill(0, 0, this.width, this.height, C_OVERLAY);
-        // The left side has no panel or custom button fill: the resource pack supplies
-        // Minecraft-style cyan button textures and the game world stays visible.
-        // Only the player profile card is opaque.
         drawPanel(ctx, rx, py, rw, ph);
-        // Draw the uploaded AetherMC logo texture instead of a text-only wordmark.
-        int logoCenterX = px + pw / 2;
-        int logoWidth = Math.min(180, pw - 20);
-        int logoHeight = Math.max(20, Math.round(logoWidth * 144.0F / 814.0F));
-        ctx.drawTexture(RenderPipelines.GUI_TEXTURED, AETHERMC_LOGO,
-            logoCenterX - logoWidth / 2, py + 9, 0.0F, 0.0F,
-            logoWidth, logoHeight, 814, 144);
-        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("MINECRAFT NETWORK"),
-            logoCenterX, py + 13 + logoHeight, C_ACCENT);
 
-        // Let the active resource pack render buttons like vanilla Options.
+        // Clean text wordmark: avoids displaying the broken two-block texture.
+        int logoCenterX = px + pw / 2;
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("AETHERMC"),
+            logoCenterX, py + 14, C_ACCENT_LIGHT);
+        ctx.fill(logoCenterX - 52, py + 34, logoCenterX + 52, py + 35, C_ACCENT_DARK);
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("MINECRAFT NETWORK"),
+            logoCenterX, py + 40, C_ACCENT);
+
         super.render(ctx, mouseX, mouseY, delta);
 
-        // Player profile card
         String name = this.client.getSession().getUsername();
         ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(name),
             rx + rw / 2, py + 18, C_WHITE);
         ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("PLAYER PROFILE"),
             rx + rw / 2, py + 34, C_MUTED);
 
-        int rankColor = 0xFF000000 | AetherPauseMenuMod.currentRankColor;
         String rankName = AetherPauseMenuMod.currentRankName;
+        int rankColor = 0xFF000000 | AetherPauseMenuMod.currentRankColor;
         int rankTextWidth = this.textRenderer.getWidth(rankName);
         int badgeWidth = Math.min(rankTextWidth + 18, rw - 24);
         int badgeX = rx + (rw - badgeWidth) / 2;
@@ -160,7 +150,6 @@ public abstract class GameMenuScreenMixin extends Screen {
         ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(rankName),
             rx + rw / 2, badgeY + 4, rankColor);
 
-        // Show the local player skin using Minecraft's own entity preview renderer.
         AbstractClientPlayerEntity player = this.client.player;
         if (player != null && !this.aether$playerPreviewFailed) {
             int centerX = rx + rw / 2;

@@ -1,0 +1,17 @@
+# Map LuckPerms PRIMARY GROUP names to the AetherMC pause-menu rank IDs.
+# The client mod uses: 0 DEFAULT, 1 JUNIOR HELPER, 2 HELPER, 3 JUNIOR MOD,
+# 4 MODERATOR, 5 BUILDER, 6 DEVELOPER, 7 MEDIA, 8 VIP, 9 MVP, 10 CO-OWNER, 11 OWNER.
+# Keys must match your LuckPerms group names (lowercase). Change them to your actual group names.
+groups:
+  default: 0
+  juniorhelper: 1
+  helper: 2
+  juniormod: 3
+  moderator: 4
+  builder: 5
+  developer: 6
+  media: 7
+  vip: 8
+  mvp: 9
+  co-owner: 10
+  owner: 11
