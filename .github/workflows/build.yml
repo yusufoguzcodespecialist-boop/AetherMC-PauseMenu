@@ -3,6 +3,8 @@ name: Build AetherMC Pause Menu Mod
 on:
   push:
     branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -18,17 +20,15 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Install Gradle 8.12
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.12'
 
       - name: Build
-        run: gradle build --no-daemon --stacktrace
+        run: ./gradlew build --no-daemon --stacktrace
 
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
-          name: AetherMC-PauseMenu-1.0.0
+          name: AetherMC-PauseMenu-1.1.0
           path: build/libs/AetherMC-PauseMenu-*.jar
           if-no-files-found: error
